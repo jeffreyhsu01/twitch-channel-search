@@ -7,7 +7,6 @@
     <div id = "result" v-if="followers" > 
         <h3> {{ followers }} followers</h3>
     </div>
-    <div v-else></div>
 </template>
 
 <script>
@@ -28,6 +27,7 @@
                     this.followers = "(Invalid username) No";
                     return;
                 }
+                this.followers = "Loading"
 
                 //fetch follower count
                 fetch('http://localhost:2000/get_user_id/users?login=' + `${this.channel_name}`)
