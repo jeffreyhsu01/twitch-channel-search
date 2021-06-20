@@ -14,4 +14,4 @@ npm run serve
 ```
 npm start
 ```
-### Did not .gitignore for better readability
+### Did not use .gitignore for better readability
