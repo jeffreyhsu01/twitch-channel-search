@@ -22,17 +22,18 @@
             fetchuserid(){ 
 
                 //check if the input string is a valid twitch username
-                if (!this.channel_name.match("^[A-Za-z0-9_]+$")){
-                    this.channel_name = "Please try again";
+                if (!this.channel_name.match("^[A-Za-z0-9_]+$")){ // this is good
+                    this.channel_name = "Please try again"; // he really doesnt like this LOL change this
                     this.followers = "(Invalid username) No";
                     return;
                 }
-                this.followers = "Loading"
+                this.followers = "Loading" // doesn't like how the followers are getting changed from type to type
 
                 //fetch follower count
                 fetch('http://localhost:2000/get_user_id/users?login=' + `${this.channel_name}`)
                     .then(res => res.json())
-                    .then(data => { this.user_id = data;
+                    .then(data => {
+                        this.user_id = data;
                         if (this.user_id == "-1" ){
                             this.followers = "(Channel not found) No"
                             return;

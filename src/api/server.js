@@ -5,21 +5,20 @@ const request = require('request');
 const cors = require('cors');
 const app = express();
 
-app.use(cors())
+app.use(cors());
 
 //db and cache
 require('dotenv').config();
 require("@aws-sdk/eventstream-marshaller");
 const sqlite3 = require('sqlite3').verbose();
-let cache = apicache.middleware;
-
+let cache = apicache.middleware; //let is now the new var
+let access_token = '';
 //config
-const PORT = 2000;
+
+const PORT = 2000; //this doesn't need to be here. put in env file?
 const HOST = "localhost";
-const API_SERVICE_URL = process.env.get_userID;
-var user_id = 0;
-var user_followers = 0
-var user_name = ''
+const API_SERVICE_URL = process.env.get_userID;//this doesn't have to be in the env
+let user_name = ''
 
 //access token
 const getToken = () => {
@@ -38,12 +37,13 @@ const getToken = () => {
             return console.log(err);
         }
         console.log(body);
+        access_token = body.access_token;
     });
 };
-var accessToken = ''
+
 getToken(process.env.get_token, (res) => {
-    accessToken = res.body.access_token;
-    return accessToken
+    access_token = res.body.access_token;
+    return access_token
 })
 
 //endpoint that proxies to twitch api to get user_id
@@ -55,27 +55,25 @@ app.use('/get_user_id', cache('5 minutes'), createProxyMiddleware({
     },
     onProxyReq(proxyReq) {
         proxyReq.setHeader('Client-ID', process.env.client_id,);
-        proxyReq.setHeader('Authorization', 'Bearer bni7kq2v4q29fjg91edlfwmrhyk359');
+        proxyReq.setHeader('Authorization', `Bearer ${access_token}`);
     },
     selfHandleResponse: true,
-    onProxyRes: responseInterceptor(async (responseBuffer) => {
-                const response = JSON.parse(responseBuffer.toString('utf8')); //reads the response
+    onProxyRes: responseInterceptor(async (response_buffer) => {
+                const response = JSON.parse(response_buffer.toString('utf8')); //reads the response
                 if (response.data){//if response
                     if (response.data[0]){//if there is a user id found
-                        user_id = (response.data[0].id); //get the user id
-                        user_name = (response.data[0].display_name);
-                        return(user_id);
+                        return(response.data[0].id);
                     }
                     else{
-                        return(user_id = "-1"); //if not
+                        return("-1"); //if not
                     }
                 }
                 else{
-                    console.log('Channel not found! :(');
+                    console.log('Channel not found! :('); // this is kind useless here
                     user_name = "nobody :(";
                 }
                 
-                return responseBuffer;
+                return response_buffer;
             })
 }));
 
@@ -88,12 +86,13 @@ app.use('/get_followers', cache('5 minutes'), createProxyMiddleware({
     },
     onProxyReq(proxyReq) {
         proxyReq.setHeader('Client-ID', process.env.client_id,);
-        proxyReq.setHeader('Authorization', 'Bearer bni7kq2v4q29fjg91edlfwmrhyk359');
+        proxyReq.setHeader('Authorization', `Bearer ${access_token}`);
     },
     selfHandleResponse: true,
     onProxyRes: responseInterceptor(async (responseBuffer) => {
                 const response = JSON.parse(responseBuffer.toString('utf8')); //reads the response
-                if (response.data.length > -1){//if there is a channel found
+                let user_followers = 0;
+                if (response.data){
                     user_followers = (response.total); //gets the amount of followers
 
                     let db = new sqlite3.Database('./database/channels.db'); //persist the data in an sqlite db
@@ -106,7 +105,7 @@ app.use('/get_followers', cache('5 minutes'), createProxyMiddleware({
                             console.log('row inserted!');
                             }
                     });
-                    db.close();
+                    db.close(); // maybe wrap this in a db object squelize ORM
                 }
                 else{
                     console.log('Channel not found! :(');
