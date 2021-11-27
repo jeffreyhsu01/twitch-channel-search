@@ -1,4 +1,4 @@
-# streamforge-application
+# twitch channel search
 
 ## Project setup
 ```
